@@ -16,3 +16,8 @@ resource "aws_route_table" "nat_route_table" {
     Name = "nat-route-table"
   }
 }
+# ASSOCIATE ROUTE TABLE -- PUBLIC LAYER
+resource "aws_route_table_association" "internet_route_table_association_public" {
+  subnet_id      = aws_subnet.public_a.id
+  route_table_id = aws_route_table.internet_route_table.id
+}
