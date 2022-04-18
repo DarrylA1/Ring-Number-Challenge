@@ -1,0 +1,12 @@
+---
+- hosts: web_servers
+  become: true
+  gather_facts: no
+  tasks:
+    - name: Get update for server
+      raw: sudo apt-get update
+    - name: Install dependencies
+      raw: sudo apt install build-essential libssl-dev libffi-dev python-dev
+
+
+
