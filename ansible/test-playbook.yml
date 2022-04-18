@@ -8,6 +8,11 @@
         state: present
         update_cache: yes
 
+    - name: Create folder for website
+      file:
+        path: "/var/www/{{ website_name }}"
+        state: directory
+
     - name: Create folder for txt file
       file:
         path: "/var/txt/ring_number"
@@ -18,11 +23,6 @@
         dest: "/var/txt/ring_number/ring.txt"
         content: |
           This is page 1
-
-    - name: Create folder for website
-      file:
-        path: "/var/www/{{ website_name }}"
-        state: directory
 
     - name: Delete sites-enable and sites-available files
       file:
@@ -53,8 +53,6 @@
         state: link
       notify:
         - Restart nginx
-
-
  
   handlers:
     - name: Restart nginx

@@ -3,7 +3,7 @@
 34.200.240.255
 3.238.194.160
 44.193.73.144
-  
+
 
 [web_servers:vars]
 ansible_user=ubuntu
