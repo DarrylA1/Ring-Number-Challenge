@@ -1,0 +1,146 @@
+---
+- hosts: web_servers
+  become: true
+  tasks:
+    - name: Update repo and Install nginx
+      apt:
+        name: "nginx"
+        state: present
+        update_cache: yes
+
+    - name: Create folder for website
+      file:
+        path: "/var/www/{{ website_name }}"
+        state: directory
+
+    - name: Get update for server
+      raw: sudo apt-get update
+
+    - name: Install cron
+      raw: sudo apt install cron
+
+    - name: Enable cron
+      raw: sudo systemctl enable cron
+
+    - name: Download MTA
+      raw: sudo apt-get install postfix
+
+    - name: Create folder for txt file
+      file:
+        path: "/var/txt/ring_number"
+        state: directory
+    
+    - name: Creating a file with content
+      copy:
+        dest: "/var/txt/ring_number/ring.txt"
+        content: |
+          0
+    
+    - name: Change file ownership, group and permissions for ring.txt file
+      ansible.builtin.file:
+        path: /var/txt/ring_number/ring.txt
+        mode: '777'
+      
+    - name: Creating a bash script
+      copy:
+        dest: "/usr/local/bin/bash_test.sh"
+        content: |
+          #!/bin/bash
+          # Copying the file to the next server
+          chmod 600 ~/bash_test.sh
+          scp -i test_ssh_key.pem /home/ec2-user/test.txt ubuntu@100.24.27.15:home/ec2/default ./default
+
+    - name: Creating a the bash script to run the python job
+      copy:
+        dest: "/var/spool/cron/crontabs/bash_python_script.sh"
+        content: |
+          #!/bin/bash
+
+          # Run python script
+          python3 python_increment_script.py  
+
+    - name: Create the CRON job to run python_increment_script
+      ansible.builtin.cron:
+        name: "txt file update"
+        minute: "*"
+        hour: "*"
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: "bash_python_script.sh"  
+
+    - name: Delete sites-enable and sites-available files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/etc/nginx/sites-enabled/default"
+        - "/etc/nginx/sites-available/default"
+      notify:
+        - Restart nginx
+
+    - name: Add webpage to servers 
+      template:
+        src: "index.html.tpl"
+        dest: "/var/www/{{ website_name }}/index.html"
+      notify:
+        - Restart nginx
+
+    - name: Configure nginx with new config file
+      template:
+        src: "default.tpl"
+        dest: "/etc/nginx/sites-available/{{ website_name }}"
+
+    - name: Create symlink for config file
+      file:
+        src: "/etc/nginx/sites-available/{{ website_name }}"
+        dest: "/etc/nginx/sites-enabled/{{ website_name }}"
+        state: link
+      notify:
+        - Restart nginx
+
+- hosts: web_servers
+  become: true
+  tasks:
+    - name: Creating a file with content
+      copy:
+        dest: "/var/txt/ring_number/python_increment_script.py"
+        content: |
+          from pathlib import Path
+
+          path_to_file = '/var/txt/ring_number/ring.txt'
+          path = Path(path_to_file)
+
+          if path.is_file():
+              #open and read the file after the appending:
+              f = open(path_to_file, "r") # open file in read mode
+              count = f.read() # read data 
+              count = int(count) + 1
+
+              f = open(path_to_file, "w") # open file in read mode
+              f.write(str(count)) # write count to file
+              f.close() # close file
+          else:
+              print(f'The file does not exist')
+
+- hosts: alpha
+  become: true
+  tasks:
+      - name: Creating a file with content
+        copy:
+          dest: "/var/txt/ring_number/ring.txt"
+          content: |
+            0
+    
+      - name: Change file ownership, group and permissions for ring.txt file
+        ansible.builtin.file:
+          path: /var/txt/ring_number/ring.txt
+          mode: '777'
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+
