@@ -42,6 +42,7 @@ variable "vpc_name" {
   type        = string
 
 }
+
 variable "my_keypair" {
   default = "ec2_dashboard"
 }

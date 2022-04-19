@@ -16,14 +16,14 @@
     - name: Get update for server
       raw: sudo apt-get update
 
+    - name: Send key to starting server
+      raw: scp -i ~/.ssh/ec2_dashboard.pem ubuntu@3.236.179.122:/.ssh
+
     - name: Install cron
       raw: sudo apt install cron
 
     - name: Enable cron
       raw: sudo systemctl enable cron
-
-    - name: Download MTA
-      raw: sudo apt-get install postfix
 
     - name: Create folder for txt file
       file:
@@ -41,23 +41,29 @@
         path: /var/txt/ring_number/ring.txt
         mode: '777'
       
-    - name: Creating a bash script
+    - name: Creating a bash script to push the file
       copy:
-        dest: "/usr/local/bin/bash_test.sh"
+        dest: "/var/spool/cron/crontabs/bash_test.sh"
         content: |
-          #!/bin/bash
+          #!/bin/sh
+
           # Copying the file to the next server
           chmod 600 ~/bash_test.sh
           scp -i test_ssh_key.pem /home/ec2-user/test.txt ubuntu@100.24.27.15:home/ec2/default ./default
 
-    - name: Creating a the bash script to run the python job
+    - name: Creating a bash script to run the python job
       copy:
         dest: "/var/spool/cron/crontabs/bash_python_script.sh"
         content: |
-          #!/bin/bash
+          #!/bin/sh
 
           # Run python script
-          python3 python_increment_script.py  
+          python3 /var/txt/ring_number/python_increment_script.py
+
+    - name: Change file ownership, group and permissions for bash file
+      ansible.builtin.file:
+          path: /var/spool/cron/crontabs/bash_python_script.sh
+          mode: '777'
 
     - name: Create the CRON job to run python_increment_script
       ansible.builtin.cron:
@@ -67,7 +73,22 @@
         day: "*"
         month: "*"
         weekday: "*"
-        job: "bash_python_script.sh"  
+        job: "/var/spool/cron/crontabs/bash_python_script.sh"
+
+    - name: Create the CRON job to push the file to the next server
+      ansible.builtin.cron:
+        name: "job to push the text file"
+        minute: "2"
+        hour: "*"
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: "/var/spool/cron/crontabs/bash_test.sh"
+    
+    - name: Change file ownership, group and permissions for bash file
+      ansible.builtin.file:
+          path: /var/spool/cron/crontabs/bash_test.sh
+          mode: '777'
 
     - name: Delete sites-enable and sites-available files
       file:

@@ -4,6 +4,7 @@ resource "aws_instance" "my_public_server" {
   instance_type          = var.ec2_type
   subnet_id              = data.aws_subnet.ring-challenge-vpc-public-a.id
   vpc_security_group_ids = [aws_security_group.my_public_app_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.dashboard_server_profile.id
   key_name               = var.my_keypair
 
   tags = {

@@ -51,7 +51,7 @@
       copy:
         dest: "/usr/local/bin/bash_python_script.sh"
         content: |
-          #!/bin/bash
+          #!/bin/sh
 
 
           # Run python script
