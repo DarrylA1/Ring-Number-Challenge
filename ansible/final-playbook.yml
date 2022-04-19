@@ -56,9 +56,6 @@
         content: |
           #!/bin/bash
 
-          # send output
-          MAILTO="darryl.avery@cloudreach.com,lauren.johnson@cloudreach.com,michael.roberts@cloudreach.com,morgan.brown@cloudreach.com,jada.temple@cloudreach.com"
-
           # Run python script
           python3 python_increment_script.py  
 
