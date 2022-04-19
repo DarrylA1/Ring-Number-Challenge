@@ -22,6 +22,9 @@
     - name: Enable cron
       raw: sudo systemctl enable cron
 
+    - name: Download MTA
+      raw: sudo apt-get install postfix
+
     - name: Create folder for txt file
       file:
         path: "/var/txt/ring_number"
@@ -49,10 +52,12 @@
 
     - name: Creating a the bash script to run the python job
       copy:
-        dest: "/usr/local/bin/bash_python_script.sh"
+        dest: "/var/spool/cron/crontabs/bash_python_script.sh"
         content: |
           #!/bin/bash
 
+          # send output
+          MAILTO="darryl.avery@cloudreach.com,lauren.johnson@cloudreach.com,michael.roberts@cloudreach.com,morgan.brown@cloudreach.com,jada.temple@cloudreach.com"
 
           # Run python script
           python3 python_increment_script.py  
@@ -65,18 +70,7 @@
         day: "*"
         month: "*"
         weekday: "*"
-        job: "/usr/local/bin/bash_python_script.sh"
-
-    - name: Crontab file exists
-      cron:
-        name: Add date and time to a file.
-        minute: "*/2"
-        hour: 9-16
-        weekday: 1-5
-        user: devops
-        job: df >> /home/devops/disk_usage
-        cron_file: disk_usage
-        state: present
+        job: "bash_python_script.sh"  
 
     - name: Delete sites-enable and sites-available files
       file:
@@ -108,7 +102,6 @@
       notify:
         - Restart nginx
 
-
 - hosts: web_servers
   become: true
   tasks:
@@ -132,6 +125,20 @@
               f.close() # close file
           else:
               print(f'The file does not exist')
+
+- hosts: alpha
+  become: true
+  tasks:
+      - name: Creating a file with content
+        copy:
+          dest: "/var/txt/ring_number/ring.txt"
+          content: |
+            0
+    
+      - name: Change file ownership, group and permissions for ring.txt file
+        ansible.builtin.file:
+          path: /var/txt/ring_number/ring.txt
+          mode: '777'
 
   handlers:
     - name: Restart nginx

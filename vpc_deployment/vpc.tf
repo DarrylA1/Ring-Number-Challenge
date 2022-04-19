@@ -2,7 +2,7 @@
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
   tags = {
-    Name = "${var.project_name}-vpc"
+    Name = "${var.project_name}"
   }
 }
 
@@ -20,7 +20,7 @@ resource "aws_eip" "nat_eip" {
 # Actually creating the nat gateway
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public_a.id
+  subnet_id     = aws_subnet.public-a.id
   tags = {
     Name = "gw NAT"
   }

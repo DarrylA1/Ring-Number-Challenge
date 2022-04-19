@@ -1,7 +1,7 @@
 resource "aws_security_group" "my_public_app_sg" {
   name        = "my_public_app_sg"
   description = "Allow access to this server"
-  vpc_id      = data.aws_vpc.main_vpc.id
+  vpc_id      = data.aws_vpc.main.id
 
   # INBOUND CONNECTIONS
   ingress {
@@ -22,7 +22,7 @@ resource "aws_security_group" "my_public_app_sg" {
 
   #OUTBOUND CONNECTIONS
   egress {
-    description  = "allow access to the world"
+    description = "allow access to the world"
     from_port   = 0
     to_port     = 0
     protocol    = "-1" # TCP + UDP

@@ -43,12 +43,13 @@ variable "vpc_name" {
 
 }
 variable "my_keypair" {
-  default = "aws_keypair"
+  default = "ec2_dashboard"
 }
 
 variable "number_of_instances" {
     description = "Amount of instances for my public subnet"
 }
+
 variable "public_subnet_name" {
   type = string
 }

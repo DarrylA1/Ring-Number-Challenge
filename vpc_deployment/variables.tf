@@ -1,7 +1,7 @@
 variable "project_name" {
   type       = string
   description = "The prefix name of the project"
-  default = "talent-academy"
+  default = "ring-challenge-vpc"
 
 }
 
